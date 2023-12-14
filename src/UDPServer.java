@@ -5,13 +5,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UDPServer {
     private static final int MAX_CLIENTS = 250;
-    private static final int TIMEOUT = 20000;
+
     public static void main(String[] args) {
        try{
            InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
@@ -21,8 +22,15 @@ public class UDPServer {
            ArrayList<String[]> questionsList = readQuestionsFromFile("bazaPytan.txt");
            System.out.println("Serwer nasłuchuje na "+serverAddress+":"+serverPort);
            while (true){
-               SocketAddress clientAddress = serverSocket.receive(new DatagramPacket(new byte[1024],1024)).getSocketAddress();
-               executorService.execute(new ClientHandler(serverSocket, clientAddress, questionsList));
+               try {
+                   byte[] receiveData = new byte[1024];
+                   DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                   serverSocket.receive(receivePacket);
+                   SocketAddress clientAddress = receivePacket.getSocketAddress();
+                   executorService.execute(new ClientHandler(serverSocket, clientAddress, questionsList));
+               } catch (Exception e) {
+                   e.printStackTrace();
+               }
            }
        }catch (Exception e){
            e.printStackTrace();
@@ -43,13 +51,24 @@ public class UDPServer {
     }
     private static String[] parseQuestionLine(String questionLine) {
         // Dzieli linię na pytanie i odpowiedzi
-        String[] parts = questionLine.split("\\n");
+        String[] parts = questionLine.split("\\*\\*");
+
+        // Sprawdź, czy istnieją odpowiedzi
+        if (parts.length < 2) {
+            // Może rzucić błąd lub inaczej obsłużyć sytuację
+            throw new IllegalArgumentException("Nieprawidłowy format pytania w pliku.");
+        }
 
         String question = parts[0].trim();
-        String[] options = {parts[1].trim(), parts[2].trim(), parts[3].trim(), parts[4].trim()};
 
-        // Wyodrębnia literę poprawnej odpowiedzi
-        String correctAnswer = parts[5].trim().toLowerCase();
+        // Pobierz odpowiedzi od pierwszej linii po znakiem '**' do ostatniej linii
+        String[] options = Arrays.copyOfRange(parts, 1, parts.length - 1);
+        for (int i = 0; i < options.length; i++) {
+            options[i] = options[i].trim();
+        }
+
+        // Wyodrębnia literę poprawnej odpowiedzi z ostatniej linii
+        String correctAnswer = parts[parts.length - 1].trim().toLowerCase();
 
         // Łączy pytanie z odpowiedziami i poprawną odpowiedzią
         String[] questionData = new String[options.length + 2];
@@ -59,5 +78,7 @@ public class UDPServer {
 
         return questionData;
     }
+
+
 
 }

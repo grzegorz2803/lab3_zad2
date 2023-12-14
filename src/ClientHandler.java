@@ -20,7 +20,7 @@ public ClientHandler(DatagramSocket serverSocket, SocketAddress clientAddress, A
     public void run() {
         try {
             DatagramSocket clientSocket = new DatagramSocket();
-            clientSocket.setSoTimeout(TIMEOUT);
+          //  clientSocket.setSoTimeout(TIMEOUT);
             FileWriter answersFileWriter = new FileWriter("bazaOdpowiedzi.txt", true);
             for (String[] questionData:questionsList){
                 String question = questionData[0];
@@ -56,7 +56,9 @@ public ClientHandler(DatagramSocket serverSocket, SocketAddress clientAddress, A
         byte[] receiveData = new byte[1024];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         clientSocket.receive(receivePacket);
-        return new String(receivePacket.getData(), 0, receivePacket.getLength()).toUpperCase();
+        String answer =new String(receivePacket.getData(), 0, receivePacket.getLength()).toUpperCase();
+        System.out.println(answer );
+        return answer;
     }
 
     private void saveAnswerToFile(FileWriter writer, String question, String answer, boolean isCorrect) throws IOException {

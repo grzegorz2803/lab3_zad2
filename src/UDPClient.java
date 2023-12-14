@@ -10,22 +10,13 @@ public class UDPClient {
             DatagramSocket clientSocket = new DatagramSocket();
 
             Scanner scanner = new Scanner(System.in);
-
+            System.out.print("Podaj imie i nazwisko:");
+            String answer = scanner.nextLine().toLowerCase();
+            // Wysyłanie odpowiedzi do serwera
+            byte[] sendData = answer.getBytes();
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, serverPort);
+            clientSocket.send(sendPacket);
             for (int i = 0; i < 10; i++) { // Zakładam 10 pytań, dostosuj do rzeczywistych potrzeb
-                System.out.print("Podaj odpowiedź (a, b, c, d) na pytanie " + (i + 1) + ": ");
-                String answer = scanner.nextLine().toLowerCase();
-
-                // Sprawdź, czy odpowiedź jest poprawna (opcjonalnie)
-                if (!answer.matches("[a-d]")) {
-                    System.out.println("Błędna odpowiedź. Podaj poprawną odpowiedź.");
-                    i--; // Powtórz to samo pytanie
-                    continue;
-                }
-
-                // Wysyłanie odpowiedzi do serwera
-                byte[] sendData = answer.getBytes();
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, serverPort);
-                clientSocket.send(sendPacket);
 
                 // Odbierz potwierdzenie od serwera
                 byte[] receiveData = new byte[1024];
@@ -33,6 +24,15 @@ public class UDPClient {
                 clientSocket.receive(receivePacket);
 
                 System.out.println("Otrzymano potwierdzenie od serwera: " + new String(receivePacket.getData(), 0, receivePacket.getLength()));
+                answer = scanner.nextLine().toLowerCase();
+                // Wysyłanie odpowiedzi do serwera
+                 sendData = answer.getBytes();
+                 sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, serverPort);
+                clientSocket.send(sendPacket);
+
+
+
+
             }
 
             // Zamknij gniazdo klienta
